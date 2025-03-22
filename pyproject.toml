@@ -1,0 +1,10 @@
+[project]
+name = "fee"
+version = "0.1.0"
+description = "backend for fee"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = ["fastapi[standard]>=0.115.11"]
+
+# [tool.uv.scripts]
+# start = "python ./app/main.py"

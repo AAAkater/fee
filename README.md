@@ -10,5 +10,5 @@ uv sync
 运行
 
 ```bash
-uv run fastapi dev ./app/main.py
+uv run fastapi dev ./main.py
 ```

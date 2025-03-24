@@ -3,6 +3,8 @@ from typing import List, Optional
 
 from sqlmodel import Field, Relationship, SQLModel
 
+from app.db.database import db_engine
+
 
 # 用户表
 class User(SQLModel, table=True):
@@ -48,3 +50,8 @@ class Message(SQLModel, table=True):
 
     # 定义与 Session 的多对一关系
     session: Session = Relationship(back_populates="messages")
+
+
+if __name__ == "__main__":
+    SQLModel.metadata.create_all(db_engine)
+    print("数据库表创建成功")

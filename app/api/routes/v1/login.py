@@ -2,10 +2,10 @@ from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import jwt
-from crud import select_user_from_username
+from app.services.create import select_user_from_username
 from dotenv import load_dotenv
 import os
-from core.config import settings
+
 
 
 load_dotenv('.env')

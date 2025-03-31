@@ -59,6 +59,7 @@ class Settings(BaseSettings):
 
     # TOKEN
     SECRET_KEY: str = secrets.token_urlsafe(nbytes=32)
+    ALGORITHM: str = "HS256"
     # 60 minutes * 24 hours * 8 days = 8 days 八天有效期
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
     API_VER_STR: str = "/api/v1"

@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from sqlmodel import Field, Relationship, SQLModel
 
-from app.db.database import db_engine
+from app.db.postgres_client import db_engine
 
 
 # 用户表

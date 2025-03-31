@@ -5,7 +5,7 @@ from sqlmodel import Session, SQLModel, create_engine
 
 from app.core.config import settings
 
-db_engine = create_engine(url=str(settings.SQLALCHEMY_DATABASE_URI))
+db_engine = create_engine(url=str(settings.POSTGRESQL_URI))
 
 
 def init_db(session: Session):

@@ -5,15 +5,15 @@ from sqlmodel import Session, SQLModel, create_engine
 
 from app.core.config import settings
 
-db_engine = create_engine(url=str(settings.POSTGRESQL_URI))
+pg_engine = create_engine(url=str(settings.POSTGRESQL_URI))
 
 
 def init_db(session: Session):
-    SQLModel.metadata.create_all(db_engine)
+    SQLModel.metadata.create_all(pg_engine)
 
 
 def get_db_session():
-    with Session(db_engine) as session:
+    with Session(pg_engine) as session:
         yield session
 
 

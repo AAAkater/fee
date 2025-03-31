@@ -1,6 +1,6 @@
 import secrets
 
-from pydantic import PostgresDsn, computed_field
+from pydantic import PostgresDsn, RedisDsn, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -20,7 +20,7 @@ class Settings(BaseSettings):
 
     @computed_field
     @property
-    def SQLALCHEMY_DATABASE_URI(self) -> PostgresDsn:
+    def POSTGRESQL_URI(self) -> PostgresDsn:
         return PostgresDsn.build(
             scheme="postgresql+psycopg2",
             username=self.POSTGRESQL_USER,
@@ -28,6 +28,24 @@ class Settings(BaseSettings):
             host=self.POSTGRESQL_SERVER,
             port=self.POSTGRESQL_PROT,
             path=self.POSTGRESQL_DB,
+        )
+
+    # REDIS
+    REDIS_HOST: str = "127.0.0.1"
+    REDIS_PORT: int = 6379
+    REDIS_PASSWORD: str = ""
+    REDIS_DB: int = 0
+    REDIS_EXPIRE: int = 600
+
+    @computed_field
+    @property
+    def REDIS_URL(self) -> RedisDsn:
+        return RedisDsn.build(
+            scheme="redis",
+            host=self.REDIS_HOST,
+            port=self.REDIS_PORT,
+            password=self.REDIS_PASSWORD,
+            path=f"/{self.REDIS_DB}",
         )
 
     # EMAIL
@@ -50,6 +68,6 @@ settings = Settings()
 
 
 if __name__ == "__main__":
-    url = settings.SQLALCHEMY_DATABASE_URI
+    url = settings.POSTGRESQL_URI
 
     print(url)

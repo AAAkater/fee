@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 
 from app.api import api_router
-from app.utils.logger import logger
 
 app = FastAPI()
 

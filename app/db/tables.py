@@ -1,10 +1,10 @@
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import List
 
 from sqlmodel import Field, Relationship, SQLModel
 
 from app.db.postgres_client import pg_engine
-from app.models.db.user import UserBase
+from app.models.db_models.user import UserBase
 
 
 # 用户表

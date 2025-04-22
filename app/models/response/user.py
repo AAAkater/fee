@@ -8,4 +8,4 @@ class TokenItem(BaseModel):
 
 class CaptchaItem(BaseModel):
     captcha_id: str
-    captcha_img_base64: str
+    captcha_img_base64: str | None = None

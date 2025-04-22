@@ -11,6 +11,8 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    PROJECT_NAME: str = "AI system"
+
     # POSTGRESQL
     POSTGRESQL_USER: str = "postgres"
     POSTGRESQL_PASSWORD: str = ""
@@ -49,13 +51,14 @@ class Settings(BaseSettings):
         )
 
     # EMAIL
+    EMAIL_ENABLED: bool = False
+    EMAIL_FROM_NAME: str = "system"
     SMTP_TLS: bool = True
     SMTP_SSL: bool = False
     SMTP_PORT: int = 587
-    SMTP_HOST: str | None = None
-    SMTP_USERNAME: str | None = None
-    SMTP_PASSWORD: str | None = None
-    EMAIL_FROM_NAME: str | None = None
+    SMTP_HOST: str = "smtp.qq.com"
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
 
     # TOKEN
     SECRET_KEY: str = secrets.token_urlsafe(nbytes=32)

@@ -30,7 +30,7 @@ class Captcha:
     def __init__(
         self,
         code_len: int = 4,
-        type: Literal["img", "email"] = "img",
+        type: Literal["image", "email"] = "image",
     ):
         self.id = uuid.uuid4().hex
         self.code_len = code_len
@@ -57,7 +57,7 @@ class Captcha:
 
     def get_captcha(self) -> CaptchaInfo:
         """获取验证码"""
-        if self.type == "img":
+        if self.type == "image":
             img_base64 = self.generate_img_base64
             r.setex(name=self.id, time=120, value=self.code)
             return CaptchaInfo(
@@ -65,11 +65,10 @@ class Captcha:
                 code=self.code,
                 base64=img_base64,
             )
-
-        # elif self.type == "email":
-        #     r.setex(name=self.id, time=120, value=self.code)
-
-        return CaptchaInfo(id=self.id, code=self.code)
+        else:
+            # 邮箱验证码
+            r.setex(name=self.id, time=120, value=self.code)
+            return CaptchaInfo(id=self.id, code=self.code)
 
     @staticmethod
     def verify_captcha(captcha_id: str, captcha_code: str) -> bool:

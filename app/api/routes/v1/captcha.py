@@ -1,5 +1,3 @@
-from typing import Literal
-
 from fastapi import APIRouter, HTTPException
 
 from app.models.response import ResponseBase
@@ -11,19 +9,16 @@ router = APIRouter(tags=["captcha"])
 
 
 @router.get(
-    "/captcha/{captcha_type}",
+    "/captcha/image",
     response_model=ResponseBase[CaptchaItem],
     summary="获取图形验证码",
 )
-async def generate_image_captcha(captcha_type: Literal["img", "email"] = "img"):
+async def generate_image_captcha():
     """生成图形验证码接口"""
 
-    if captcha_type != "img":
-        logger.error(f"验证码类型不支持: {captcha_type}")
-        raise HTTPException(status_code=400, detail="验证码类型不支持")
     try:
         # 创建图形验证码对象(type为img)
-        captcha = Captcha(type="img")
+        captcha = Captcha(type="image")
 
         # 获取验证码信息(包括id、code、base64)
         captcha_info: CaptchaInfo = captcha.get_captcha()
@@ -37,3 +32,14 @@ async def generate_image_captcha(captcha_type: Literal["img", "email"] = "img"):
     except Exception as e:
         logger.error(f"生成验证码失败:\n {e}")
         raise HTTPException(status_code=500, detail="验证码生成失败")
+
+
+@router.get(
+    "/captcha/email",
+    response_model=ResponseBase[CaptchaItem],
+    summary="获取邮箱验证码",
+)
+async def generate_email_captcha(email: str):
+    """生成邮箱验证码接口"""
+
+    pass

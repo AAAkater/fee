@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from app.db.postgres_client import SessionDep
-from app.models.db.user import UserCreate
+from app.models.db_models.user import UserCreate
 from app.models.request.user import UserRegisterBody
 from app.models.response import ResponseBase
 from app.models.response.user import TokenItem

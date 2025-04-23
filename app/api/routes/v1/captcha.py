@@ -1,6 +1,7 @@
 from email_validator import EmailNotValidError, validate_email
 from fastapi import APIRouter, HTTPException
 
+from app.db.redis_client import r
 from app.models.response import ResponseBase
 from app.models.response.user import CaptchaItem
 from app.utils.email import send_email_captcha
@@ -24,7 +25,10 @@ async def generate_image_captcha() -> ResponseBase[CaptchaItem]:
 
         # 获取验证码信息(包括id、code、base64)
         captcha_info: CaptchaInfo = captcha.get_captcha()
-        logger.info(f"生成验证码成功: {captcha_info.code=}")
+        logger.success(f"生成验证码成功: {captcha_info.code=}")
+        # 有效期120秒
+        r.setex(name=captcha_info.id, time=120, value=captcha_info.code)
+
         return ResponseBase[CaptchaItem](
             data=CaptchaItem(
                 captcha_id=captcha_info.id,
@@ -63,10 +67,9 @@ async def generate_email_captcha(email: str) -> ResponseBase[CaptchaItem]:
 
         # 发送邮箱验证码
         send_email_captcha(email_to=email, captcha=captcha_info)
-
-        return ResponseBase[CaptchaItem](
-            data=CaptchaItem(captcha_id=captcha_info.id)
-        )
+        # 有效期120秒
+        r.setex(name=email, time=120, value=captcha_info.code)
+        return ResponseBase()
     except Exception as e:
-        logger.error(f"生成验证码失败:\n {e}")
-        raise HTTPException(status_code=500, detail="验证码生成失败")
+        logger.error(f"邮箱验证码发送失败:\n {e}")
+        raise HTTPException(status_code=500, detail="邮箱验证码发送失败")

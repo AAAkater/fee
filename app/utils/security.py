@@ -59,16 +59,12 @@ class Captcha:
         """获取验证码"""
         if self.type == "image":
             img_base64 = self.generate_img_base64
-            r.setex(name=self.id, time=120, value=self.code)
             return CaptchaInfo(
                 id=self.id,
                 code=self.code,
                 base64=img_base64,
             )
-        else:
-            # 邮箱验证码
-            r.setex(name=self.id, time=120, value=self.code)
-            return CaptchaInfo(id=self.id, code=self.code)
+        return CaptchaInfo(id=self.id, code=self.code)
 
     @staticmethod
     def verify_captcha(captcha_id: str, captcha_code: str) -> bool:

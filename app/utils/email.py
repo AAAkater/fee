@@ -43,7 +43,6 @@ def send_email_captcha(
     if response.status_code != 250:
         logger.error(f"send email error: {response}")
         raise Exception(f"send email error: {response}")
-    logger.info(f"send email result: {response}")
 
 
 if __name__ == "__main__":

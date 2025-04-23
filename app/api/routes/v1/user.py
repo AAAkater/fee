@@ -9,6 +9,7 @@ from app.models.request.user import UserRegisterBody
 from app.models.response import ResponseBase
 from app.models.response.user import TokenItem
 from app.service.user import create_new_user
+from app.utils.security import Captcha
 from app.utils import security
 from app.utils.logger import logger
 from app.utils.token import create_access_token
@@ -38,6 +39,18 @@ async def register(session: SessionDep, new_user: UserRegisterBody):
     logger.info(f"注册新用户：{new_user.username} {new_user.password}")
 
     try:
+        # 验证邮箱验证码
+        if not Captcha.verify_captcha(
+            new_user.email, new_user.email_captcha_code
+        ):
+            raise HTTPException(status_code=400, detail="邮箱验证码错误")
+
+        # 验证图片验证码
+        if not Captcha.verify_captcha(
+            new_user.img_captcha_id, new_user.img_captcha_code
+        ):
+            raise HTTPException(status_code=400, detail="图片验证码错误")
+
         create_new_user(
             sessions=session,
             new_user_info=UserCreate(

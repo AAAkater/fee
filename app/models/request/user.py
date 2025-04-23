@@ -2,9 +2,9 @@ from pydantic import BaseModel
 
 
 class UserRegisterBody(BaseModel):
-    password: str
     username: str
+    password: str
     email: str
-    email_captcha: str
-    captcha_id: str
-    img_captcha: str
+    email_captcha_code: str
+    img_captcha_id: str
+    img_captcha_code: str

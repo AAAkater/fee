@@ -21,7 +21,7 @@ def send_email_captcha(
     email_to: str,
     captcha: CaptchaInfo,
 ) -> None:
-    assert not settings.EMAIL_ENABLED, (
+    assert settings.EMAIL_ENABLED, (
         "no provided configuration for email variables"
     )
     email_subject = "用户注册"
@@ -47,7 +47,7 @@ def send_email_captcha(
 
 
 if __name__ == "__main__":
-    test_email = "Zyj647@126.com"
+    test_email = ""
 
     test_captcha = CaptchaInfo(code="abcd", id="123456")
     try:
@@ -57,4 +57,5 @@ if __name__ == "__main__":
         )
     except Exception as e:
         logger.error(e)
+        exit(0)
     logger.success("Email sent successfully")

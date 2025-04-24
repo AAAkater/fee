@@ -1,5 +1,5 @@
 from email_validator import EmailNotValidError, validate_email
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 
 from app.db.redis_client import r
 from app.models.response import ResponseBase
@@ -14,6 +14,7 @@ router = APIRouter(tags=["captcha"])
 @router.get(
     "/captcha/image",
     response_model=ResponseBase[CaptchaItem],
+    status_code=status.HTTP_200_OK,
     summary="获取图形验证码",
 )
 async def generate_image_captcha() -> ResponseBase[CaptchaItem]:
@@ -37,23 +38,29 @@ async def generate_image_captcha() -> ResponseBase[CaptchaItem]:
         )
     except Exception as e:
         logger.error(f"生成验证码失败:\n {e}")
-        raise HTTPException(status_code=500, detail="验证码生成失败")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="验证码生成失败",
+        )
 
 
 @router.get(
     "/captcha/email",
-    response_model=ResponseBase[CaptchaItem],
+    response_model=ResponseBase,
+    status_code=status.HTTP_200_OK,
     summary="获取邮箱验证码",
 )
-async def generate_email_captcha(email: str) -> ResponseBase[CaptchaItem]:
+async def generate_email_captcha(email: str) -> ResponseBase:
     """生成邮箱验证码接口"""
 
     try:
         # 校验邮箱格式
-        validate_email(email)
+        _ = validate_email(email)
     except EmailNotValidError as e:
         logger.error(f"邮箱格式错误:\n {e}")
-        raise HTTPException(status_code=400, detail="邮箱格式错误")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="邮箱格式错误"
+        )
 
     try:
         # 创建图形验证码对象(type为email)
@@ -72,4 +79,7 @@ async def generate_email_captcha(email: str) -> ResponseBase[CaptchaItem]:
         return ResponseBase()
     except Exception as e:
         logger.error(f"邮箱验证码发送失败:\n {e}")
-        raise HTTPException(status_code=500, detail="邮箱验证码发送失败")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="邮箱验证码发送失败",
+        )

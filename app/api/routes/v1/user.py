@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from app.db.postgres_client import SessionDep
@@ -9,9 +9,9 @@ from app.models.request.user import UserRegisterBody
 from app.models.response import ResponseBase
 from app.models.response.user import TokenItem
 from app.service.user import create_new_user
-from app.utils.security import Captcha
 from app.utils import security
 from app.utils.logger import logger
+from app.utils.security import Captcha
 from app.utils.token import create_access_token
 
 router = APIRouter(tags=["user"])
@@ -34,7 +34,12 @@ async def login(
     )
 
 
-@router.post("/register", response_model=ResponseBase)
+@router.post(
+    "/register",
+    status_code=status.HTTP_200_OK,
+    response_model=ResponseBase,
+    summary="用户注册",
+)
 async def register(session: SessionDep, new_user: UserRegisterBody):
     logger.info(f"注册新用户：{new_user.username} {new_user.password}")
 
@@ -43,13 +48,17 @@ async def register(session: SessionDep, new_user: UserRegisterBody):
         if not Captcha.verify_captcha(
             new_user.email, new_user.email_captcha_code
         ):
-            raise HTTPException(status_code=400, detail="邮箱验证码错误")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="邮箱验证码错误"
+            )
 
         # 验证图片验证码
         if not Captcha.verify_captcha(
             new_user.img_captcha_id, new_user.img_captcha_code
         ):
-            raise HTTPException(status_code=400, detail="图片验证码错误")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="图片验证码错误"
+            )
 
         create_new_user(
             sessions=session,

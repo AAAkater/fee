@@ -1,15 +1,9 @@
-from typing import Annotated
-
-from fastapi import Depends
+from sqlalchemy import Engine
 from sqlmodel import Session, SQLModel, create_engine
 
 from app.core.config import settings
 
-pg_engine = create_engine(url=str(settings.POSTGRESQL_URI))
-
-
-def init_db(session: Session):
-    SQLModel.metadata.create_all(pg_engine)
+pg_engine: Engine = create_engine(url=str(settings.POSTGRESQL_URI))
 
 
 def get_db_session():
@@ -17,4 +11,5 @@ def get_db_session():
         yield session
 
 
-SessionDep = Annotated[Session, Depends(get_db_session)]
+def init_tables():
+    SQLModel.metadata.create_all(pg_engine)

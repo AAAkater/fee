@@ -3,7 +3,6 @@ from typing import List
 
 from sqlmodel import Field, Relationship, SQLModel
 
-from app.db.postgres_client import pg_engine
 from app.models.db_models.user import UserBase
 
 
@@ -49,8 +48,3 @@ class Message(SQLModel, table=True):
 
     # 定义与 Session 的多对一关系
     session: Session = Relationship(back_populates="messages")
-
-
-if __name__ == "__main__":
-    SQLModel.metadata.create_all(pg_engine)
-    print("数据库表创建成功")

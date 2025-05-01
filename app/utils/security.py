@@ -20,6 +20,11 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
+def verify_password(password: str, hashed_password: str) -> bool:
+    """验证密码"""
+    return pwd_context.verify(password, hashed_password)
+
+
 class CaptchaInfo(BaseModel):
     id: str
     code: str

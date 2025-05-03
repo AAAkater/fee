@@ -1,5 +1,3 @@
-from datetime import datetime, timezone
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -36,7 +34,7 @@ async def login(
             status_code=status.HTTP_400_BAD_REQUEST, detail="用户名或密码错误"
         )
 
-    token = create_access_token(str(user.user_id))
+    token = create_access_token(str(user.id))
 
     return ResponseBase[TokenItem](
         code="0",
@@ -51,7 +49,9 @@ async def login(
     response_model=ResponseBase,
     summary="用户注册",
 )
-async def register(session: SessionDep, new_user: UserRegisterBody):
+async def register(
+    session: SessionDep, new_user: UserRegisterBody
+) -> ResponseBase:
     # 验证邮箱验证码
     if not Captcha.verify_captcha(new_user.email, new_user.email_captcha_code):
         raise HTTPException(
@@ -82,7 +82,6 @@ async def register(session: SessionDep, new_user: UserRegisterBody):
                 username=new_user.username,
                 email=new_user.email,
                 password_hash=security.get_password_hash(new_user.password),
-                created_at=datetime.now(timezone.utc),
             ),
         )
     except Exception as e:

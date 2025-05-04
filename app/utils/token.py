@@ -62,7 +62,7 @@ def get_access_token_info(token: str) -> TokenPayload:
     Raises:
         HTTPException: If the token is expired, invalid, or fails validation.
             The exception will have status code 401 (UNAUTHORIZED) and detail
-            message "Token已过期或失效" (Token expired or invalid).
+            message "Token expired or invalid".
     """
     try:
         payload = jwt.decode(
@@ -73,5 +73,6 @@ def get_access_token_info(token: str) -> TokenPayload:
         return TokenPayload(**payload)
     except (ExpiredSignatureError, JWTError, ValidationError):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token已过期或失效"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token expired or invalid",
         )

@@ -24,9 +24,9 @@ def get_user_by_username(*, session: Session, username: str) -> User:
     return select_user
 
 
-def get_user_by_id(*, session: Session, user_id: UUID) -> User | None:
+def get_user_by_id(*, session: Session, user_id: UUID) -> User:
     statements = select(User).where(User.id == user_id)
-    select_user = session.exec(statements).first()
+    select_user = session.exec(statements).one()
 
     return select_user
 

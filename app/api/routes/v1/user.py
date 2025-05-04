@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -18,20 +20,40 @@ router = APIRouter(tags=["user"])
 @router.post(
     "/login",
     response_model=ResponseBase[TokenItem],
-    summary="用户登录",
+    summary="User login",
 )
 async def login(
     session: SessionDep,
-    user_form: OAuth2PasswordRequestForm = Depends(),
+    user_form: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> ResponseBase[TokenItem]:
-    user = user_service.get_user_by_username(
-        session=session,
-        username=user_form.username,
-    )
+    """
+    Authenticates a user and returns an access token.
 
-    if not user:
+    Args:
+        session (SessionDep): Database session dependency.
+        user_form (Annotated[OAuth2PasswordRequestForm, Depends()]): Form containing username and password.
+
+    Returns:
+        ResponseBase[TokenItem]: Response containing the access token with type 'Bearer'.
+
+    Raises:
+        HTTPException: If user authentication fails (400 status code).
+
+    Notes:
+        - Uses OAuth2 password flow for authentication.
+        - Logs errors if user retrieval fails.
+        - Generates JWT access token for authenticated users.
+    """
+    try:
+        user = user_service.get_user_by_username(
+            session=session,
+            username=user_form.username,
+        )
+    except Exception as e:
+        logger.error(f"Failed to obtain user information:\n{e}")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="用户名或密码错误"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect username or password",
         )
 
     token = create_access_token(str(user.id))
@@ -47,34 +69,71 @@ async def login(
     "/register",
     status_code=status.HTTP_200_OK,
     response_model=ResponseBase,
-    summary="用户注册",
+    summary="User registration",
 )
 async def register(
     session: SessionDep, new_user: UserRegisterBody
 ) -> ResponseBase:
-    # 验证邮箱验证码
+    """
+    Registers a new user after validating captcha codes and username availability.
+
+    Validates both email and image captcha codes, checks if the username is already taken,
+    and creates a new user if all validations pass.
+
+    Args:
+        session (SessionDep): Database session dependency.
+        new_user (UserRegisterBody): User registration data including:
+            - username: Desired username
+            - email: User's email address
+            - password: User's password
+            - email_captcha_code: Email verification code
+            - img_captcha_id: Image captcha ID
+            - img_captcha_code: Image captcha code
+
+    Returns:
+        ResponseBase: Empty response indicating successful registration.
+
+    Raises:
+        HTTPException:
+            - 400 if email verification code is invalid
+            - 400 if image verification code is invalid
+            - 400 if username already exists
+            - 500 if user creation fails
+    """
+    # Verify email verification code
     if not Captcha.verify_captcha(new_user.email, new_user.email_captcha_code):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="邮箱验证码错误"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Wrong email verification code",
         )
 
-    # 验证图片验证码
+    # Verify image verification code
     if not Captcha.verify_captcha(
         new_user.img_captcha_id, new_user.img_captcha_code
     ):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="图片验证码错误"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Wrong image verification code",
         )
 
-    # 检查用户名是否已存在
-    user = user_service.get_user_by_username(
-        session=session, username=new_user.username
-    )
-    if user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="用户名已存在"
-        )
+    # Check if the username already exists
 
+    try:
+        db_user = user_service.get_user_by_username(
+            session=session, username=new_user.username
+        )
+        if db_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username already exists",
+            )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.info(f"The new username is not used:\n{e}")
+
+    # Create a new user
     try:
         user_service.create_new_user(
             session=session,
@@ -85,7 +144,10 @@ async def register(
             ),
         )
     except Exception as e:
-        logger.error(f"注册用户失败：{e}")
-        raise HTTPException(status_code=500, detail="注册失败")
+        logger.error(f"Failed to register new user:\n{e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to register new user",
+        )
 
     return ResponseBase()

@@ -21,6 +21,23 @@ def send_email_captcha(
     email_to: str,
     captcha: CaptchaInfo,
 ) -> None:
+    """
+    Sends an email containing a CAPTCHA code to the specified recipient.
+
+    Args:
+        email_to (str): The email address of the recipient.
+        captcha (CaptchaInfo): An object containing the CAPTCHA code to be sent.
+
+    Raises:
+        AssertionError: If email functionality is not enabled in the settings.
+        Exception: If the email fails to send (non-250 status code).
+
+    Notes:
+        - Requires email configuration in settings (SMTP credentials, etc.).
+        - Uses a predefined email template for the CAPTCHA message.
+        - The email subject is hardcoded as "用户注册" (User Registration).
+        - Logs errors if email sending fails.
+    """
     assert settings.EMAIL_ENABLED, (
         "no provided configuration for email variables"
     )

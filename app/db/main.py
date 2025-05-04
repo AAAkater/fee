@@ -15,13 +15,8 @@ from app.utils.token import TokenDep, get_access_token_info
 
 @asynccontextmanager
 async def init_db(_: FastAPI):
-    """
-    初始化数据库
-    :return:
-    """
-
-    # 创建所有表
     try:
+        # 创建所有表
         init_tables()
         if not r.ping():
             raise Exception("Redis连接失败")

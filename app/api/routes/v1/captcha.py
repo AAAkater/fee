@@ -15,19 +15,38 @@ router = APIRouter(tags=["captcha"])
     "/captcha/image",
     response_model=ResponseBase[CaptchaItem],
     status_code=status.HTTP_200_OK,
-    summary="获取图形验证码",
+    summary="Get image verification code",
 )
 async def generate_image_captcha() -> ResponseBase[CaptchaItem]:
-    """生成图形验证码接口"""
+    """
+    Generates an image-based CAPTCHA and returns its details.
+
+    This asynchronous function creates an image CAPTCHA, stores the verification code in Redis
+    with a 120-second expiration time, and returns the CAPTCHA details including its ID and
+    base64-encoded image.
+
+    Returns:
+        ResponseBase[CaptchaItem]: A response object containing:
+            - captcha_id: The unique identifier for the CAPTCHA
+            - captcha_img_base64: The base64-encoded CAPTCHA image
+
+    Raises:
+        HTTPException: If CAPTCHA generation fails, raises a 500 Internal Server Error
+            with detail message "verification code generation failed"
+
+    Note:
+        The CAPTCHA code is stored in Redis with the CAPTCHA ID as key and has a TTL of 120 seconds.
+        The function logs both successful and failed generation attempts.
+    """
 
     try:
-        # 创建图形验证码对象(type为img)
         captcha = Captcha(type="image")
 
-        # 获取验证码信息(包括id、code、base64)
         captcha_info: CaptchaInfo = captcha.get_captcha()
-        logger.success(f"生成验证码成功: {captcha_info.code=}")
-        # 有效期120秒
+        logger.success(
+            f"Verification code generated successfully: {captcha_info.code=}"
+        )
+        # valid for 120 seconds
         r.setex(name=captcha_info.id, time=120, value=captcha_info.code)
 
         return ResponseBase[CaptchaItem](
@@ -37,10 +56,10 @@ async def generate_image_captcha() -> ResponseBase[CaptchaItem]:
             ),
         )
     except Exception as e:
-        logger.error(f"生成验证码失败:\n {e}")
+        logger.error(f"Verification code generation failed:\n {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="验证码生成失败",
+            detail="Verification code generation failed",
         )
 
 
@@ -48,38 +67,56 @@ async def generate_image_captcha() -> ResponseBase[CaptchaItem]:
     "/captcha/email",
     response_model=ResponseBase,
     status_code=status.HTTP_200_OK,
-    summary="获取邮箱验证码",
+    summary="Get email verification code",
 )
 async def generate_email_captcha(email: str) -> ResponseBase:
-    """生成邮箱验证码接口"""
+    """
+    Generates and sends an email captcha to the specified email address.
+
+    Validates the email format, generates a captcha, sends it via email, and stores it in Redis with a 120-second expiration.
+
+    Args:
+        email (str): The recipient email address to send the captcha to.
+
+    Returns:
+        ResponseBase: An empty response indicating successful operation.
+
+    Raises:
+        HTTPException:
+            - 400 Bad Request if the email format is invalid.
+            - 500 Internal Server Error if captcha generation or email sending fails.
+
+    Notes:
+        - The captcha code is stored in Redis with the email as the key.
+        - The captcha code expires after 120 seconds.
+        - Logs success or error messages for debugging purposes.
+    """
 
     try:
-        # 校验邮箱格式
+        # Verify email format
         _ = validate_email(email)
     except EmailNotValidError as e:
-        logger.error(f"邮箱格式错误:\n {e}")
+        logger.error(f"Email format error:\n {e}")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="邮箱格式错误"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Email format error"
         )
 
     try:
-        # 创建图形验证码对象(type为email)
         captcha = Captcha(type="email")
 
-        # 获取验证码信息(包括id、code)
         captcha_info: CaptchaInfo = captcha.get_captcha()
 
-        # 记录日志
-        logger.success(f"生成验证码成功: {captcha_info.code=}")
+        logger.success(
+            f"Verification code generated successfully: {captcha_info.code=}"
+        )
 
-        # 发送邮箱验证码
         send_email_captcha(email_to=email, captcha=captcha_info)
-        # 有效期120秒
+        # valid for 120 seconds
         r.setex(name=email, time=120, value=captcha_info.code)
         return ResponseBase()
     except Exception as e:
-        logger.error(f"邮箱验证码发送失败:\n {e}")
+        logger.error(f"Email verification code sending failed:\n {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="邮箱验证码发送失败",
+            detail="Email verification code sending failed",
         )

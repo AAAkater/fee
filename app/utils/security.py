@@ -16,12 +16,29 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def get_password_hash(password: str) -> str:
-    """生成密码的哈希值"""
+    """
+    Hashes a password using the configured password hashing context.
+
+    Args:
+        password (str): The plain text password to hash.
+
+    Returns:
+        str: The hashed password.
+    """
     return pwd_context.hash(password)
 
 
 def verify_password(password: str, hashed_password: str) -> bool:
-    """验证密码"""
+    """
+    Verifies if the provided password matches the hashed password.
+
+    Args:
+        password (str): The plain text password to verify.
+        hashed_password (str): The hashed password to compare against.
+
+    Returns:
+        bool: True if the password matches the hashed password, False otherwise.
+    """
     return pwd_context.verify(password, hashed_password)
 
 
@@ -32,6 +49,25 @@ class CaptchaInfo(BaseModel):
 
 
 class Captcha:
+    """
+    A class for generating and verifying CAPTCHAs (Completely Automated Public Turing tests).
+
+    This class provides functionality to generate CAPTCHA codes either as text or images,
+    and includes methods for verification. The CAPTCHA can be customized in length and type.
+
+    Attributes:
+        id (str): A unique identifier for the CAPTCHA instance.
+        code_len (int): The length of the CAPTCHA code (default: 4).
+        type (Literal["image", "email"]): The type of CAPTCHA to generate (default: "image").
+        code (str): The generated CAPTCHA code.
+
+    Methods:
+        generate_code: Generates a random CAPTCHA code.
+        generate_img_base64: Generates a base64-encoded image of the CAPTCHA code.
+        get_captcha: Retrieves CAPTCHA information based on the specified type.
+        verify_captcha: Verifies if the provided CAPTCHA code matches the stored one.
+    """
+
     def __init__(
         self,
         code_len: int = 4,

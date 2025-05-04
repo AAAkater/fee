@@ -21,13 +21,21 @@ class TokenPayload(BaseModel):
 
 
 def create_access_token(user_id: str) -> str:
-    """_summary_
+    """
+    Generates a JWT access token for the given user ID.
+
+    The token contains an expiration time based on the configured ACCESS_TOKEN_EXPIRE_MINUTES
+    setting and is signed using the application's SECRET_KEY and ALGORITHM settings.
 
     Args:
-        subject (str): _description_
+        user_id: The unique identifier of the user for whom the token is being generated.
 
     Returns:
-        str: _description_
+        str: A JWT encoded string containing the user ID and expiration time.
+
+    Note:
+        The token payload follows the TokenPayload model structure, which includes
+        the expiration timestamp (exp) and user_id fields.
     """
     expired_time = datetime.now(tz=timezone.utc) + timedelta(
         minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
@@ -43,6 +51,19 @@ def create_access_token(user_id: str) -> str:
 
 
 def get_access_token_info(token: str) -> TokenPayload:
+    """Decodes and validates a JWT access token.
+
+    Args:
+        token (str): The JWT access token to decode and validate.
+
+    Returns:
+        TokenPayload: A TokenPayload object containing the decoded token payload.
+
+    Raises:
+        HTTPException: If the token is expired, invalid, or fails validation.
+            The exception will have status code 401 (UNAUTHORIZED) and detail
+            message "Token已过期或失效" (Token expired or invalid).
+    """
     try:
         payload = jwt.decode(
             token,

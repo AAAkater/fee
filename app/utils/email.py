@@ -9,8 +9,8 @@ def get_email_template(code: str) -> str:
     return f"""
         <html>
         <body>
-            <p>验证码:{code}</p>
-            <p>60秒后失效</p>
+            <p>captcha code:{code}</p>
+            <p>valid for 60 seconds</p>
         </body>
         </html>
     """
@@ -35,13 +35,13 @@ def send_email_captcha(
     Notes:
         - Requires email configuration in settings (SMTP credentials, etc.).
         - Uses a predefined email template for the CAPTCHA message.
-        - The email subject is hardcoded as "用户注册" (User Registration).
+        - The email subject is hardcoded as "User Registration".
         - Logs errors if email sending fails.
     """
     assert settings.EMAIL_ENABLED, (
         "no provided configuration for email variables"
     )
-    email_subject = "用户注册"
+    email_subject = "User Registration"
     html_template = get_email_template(captcha.code)
     message = emails.Message(
         subject=email_subject,

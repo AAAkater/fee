@@ -5,27 +5,50 @@ from fastapi import APIRouter, HTTPException, status
 from app.db.main import CurrentUser, SessionDep
 from app.models.db_models.chat import ChatCreate, MessageCreate
 from app.models.response import ResponseBase
+from app.models.response.chat import ChatItem
 from app.services import chat_service
 from app.utils.logger import logger
 
 router = APIRouter(tags=["chat"])
 
 
-@router.post("/chat", summary="创建新的对话")
+@router.post("/chat", summary="Create a new chat")
 async def create_new_chat(
     session: SessionDep,
     current_user: CurrentUser,
-):
-    chat = ChatCreate(owner_id=current_user.id, title="New Chat")
+) -> ResponseBase[ChatItem]:
+    """
+    Creates a new chat for the current user.
+
+    Args:
+        session (SessionDep): Database session dependency.
+        current_user (CurrentUser): Authenticated current user.
+
+    Returns:
+        ResponseBase[ChatItem]: Response containing the newly created chat item.
+
+    Raises:
+        HTTPException: If an error occurs during chat creation, raises a 500 Internal Server Error.
+
+    Note:
+        The new chat will be initialized with a default title of "New Chat".
+    """
     try:
-        chat_service.create_new_chat(session=session, new_chat_info=chat)
+        chat = chat_service.create_new_chat(
+            session=session,
+            new_chat_info=ChatCreate(
+                owner_id=current_user.id, title="New Chat"
+            ),
+        )
     except Exception as e:
-        logger.error(f"创建对话失败: {e}")
+        logger.error(f"Failed to create a new chat:\n{e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="创建对话失败",
+            detail="Failed to create a new chat",
         )
-    return ResponseBase()
+    return ResponseBase[ChatItem](
+        data=ChatItem(id=chat.id, title=chat.title, created_at=chat.created_at)
+    )
 
 
 @router.post(

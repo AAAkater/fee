@@ -17,9 +17,9 @@ def create_new_user(*, session: Session, new_user_info: UserCreate):
     session.refresh(new_user)
 
 
-def get_user_by_username(*, session: Session, username: str) -> User | None:
+def get_user_by_username(*, session: Session, username: str) -> User:
     statements = select(User).where(User.username == username)
-    select_user = session.exec(statements).first()
+    select_user = session.exec(statements).one()
 
     return select_user
 

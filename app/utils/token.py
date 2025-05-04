@@ -8,6 +8,7 @@ from jose.exceptions import ExpiredSignatureError, JWTError
 from pydantic import BaseModel, ValidationError
 
 from app.core.config import settings
+from app.utils.logger import logger
 
 oauth2_scheme = OAuth2PasswordBearer(f"{settings.API_VER_STR}/login")
 
@@ -71,7 +72,8 @@ def get_access_token_info(token: str) -> TokenPayload:
             algorithms=settings.ALGORITHM,
         )
         return TokenPayload(**payload)
-    except (ExpiredSignatureError, JWTError, ValidationError):
+    except (ExpiredSignatureError, JWTError, ValidationError) as e:
+        logger.error(f"Token validation error:\n{e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token expired or invalid",

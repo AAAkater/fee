@@ -8,3 +8,9 @@ class ChatItem(BaseModel):
     id: UUID
     title: str
     created_at: datetime
+
+
+class ChatMessage(BaseModel):
+    chat_id: str
+    role: str
+    content: str

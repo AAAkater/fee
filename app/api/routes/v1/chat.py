@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, status
 from app.db.main import CurrentUser, SessionDep
 from app.models.db_models.chat import ChatCreate, MessageCreate
 from app.models.response import ResponseBase
-from app.models.response.chat import ChatItem
+from app.models.response.chat import ChatItem, ChatMessage
 from app.services import chat_service
 from app.utils.logger import logger
 
@@ -53,7 +53,7 @@ async def create_new_chat(
 
 @router.post(
     "/chat/messages",
-    summary="添加消息",
+    summary="Add messages",
 )
 async def add_message(
     session: SessionDep,
@@ -65,12 +65,16 @@ async def add_message(
             session=session, new_message=new_message_body
         )
     except Exception as e:
-        logger.error(f"添加消息失败: {e}")
+        logger.error(f"Failed to add messages: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="添加消息失败",
+            detail="Failed to add messages",
         )
-    return ResponseBase()
+    return ResponseBase[ChatMessage](
+        data=ChatMessage(
+            chat_id=current_user.id, role=current_user, content=new_message_body
+        )
+    )
 
 
 @router.get("/chat/messages")
@@ -85,10 +89,10 @@ async def get_chat_messages(
         )
         return ResponseBase(data=messages)
     except Exception as e:
-        logger.error(f"获取消息失败: {e}")
+        logger.error(f"Failed to get the messages: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="获取消息失败",
+            detail="Failed to get the messages",
         )
 
 
@@ -103,8 +107,8 @@ async def get_user_chats(
         )
         return ResponseBase(data=chats)
     except Exception as e:
-        logger.error(f"获取对话列表失败: {e}")
+        logger.error(f"Failed to get conversation list: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="获取对话列表失败",
+            detail="Failed to get conversation list",
         )

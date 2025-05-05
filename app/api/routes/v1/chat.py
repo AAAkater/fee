@@ -1,11 +1,13 @@
+from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status
 
 from app.db.main import CurrentUser, SessionDep
 from app.models.db_models.chat import ChatCreate, MessageCreate
+from app.models.request.chat import UserQueryBody
 from app.models.response import ResponseBase
-from app.models.response.chat import ChatItem, ChatMessage
+from app.models.response.chat import ChatItem, MessageItem
 from app.services import chat_service
 from app.utils.logger import logger
 
@@ -58,11 +60,16 @@ async def create_new_chat(
 async def add_message(
     session: SessionDep,
     current_user: CurrentUser,
-    new_message_body: MessageCreate,
+    user_query_body: UserQueryBody,
 ):
     try:
         chat_service.add_message_to_chat(
-            session=session, new_message=new_message_body
+            session=session,
+            new_message=MessageCreate(
+                chat_id=user_query_body.chat_id,
+                role=user_query_body.role,
+                content=user_query_body.content,
+            ),
         )
     except Exception as e:
         logger.error(f"Failed to add messages: {e}")
@@ -70,9 +77,17 @@ async def add_message(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to add messages",
         )
-    return ResponseBase[ChatMessage](
-        data=ChatMessage(
-            chat_id=current_user.id, role=current_user, content=new_message_body
+
+    # TODO
+    # The interface returned by GPT has not been implemented yet,
+    # so this variable is temporarily used to replace it
+    gpt_resp_content = "test"
+
+    return ResponseBase[MessageItem](
+        data=MessageItem(
+            role="assistant",
+            content=gpt_resp_content,
+            created_at=datetime.now(timezone.utc),
         )
     )
 

@@ -31,8 +31,10 @@ class MessageInfo(SQLModel):
     created_at: datetime
 
 
-class MessageCreate(MessageBase):
-    pass
+class MessageCreate(SQLModel):
+    chat_id: UUID
+    role: str
+    content: str
 
 
 class ChatCreate(ChatBase):

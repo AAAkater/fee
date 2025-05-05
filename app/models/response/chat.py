@@ -10,7 +10,7 @@ class ChatItem(BaseModel):
     created_at: datetime
 
 
-class ChatMessage(BaseModel):
-    chat_id: str
+class MessageItem(BaseModel):
     role: str
     content: str
+    created_at: datetime

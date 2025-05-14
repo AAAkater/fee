@@ -113,13 +113,22 @@ async def get_chat_messages(
     current_user: CurrentUser,
     chat_id: UUID,
 ):
-    Chats = chat_service.get_chats_by_user_id(
-        session=session, user_id=current_user.id
-    )
-    if not any(chat.id == chat_id for chat in Chats):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="无权限"
+    try:
+        db_chat = chat_service.get_chat_by_chat_id(
+            session=session, chat_id=chat_id
         )
+    except Exception as e:
+        logger.error(f"Failed to get chat by chat_id: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Chat not found",
+        )
+
+    if db_chat.owner_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="No permission"
+        )
+
     try:
         messages = chat_service.get_messages_from_chat(
             session=session, chat_id=chat_id

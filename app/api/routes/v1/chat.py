@@ -62,6 +62,14 @@ async def add_message(
     current_user: CurrentUser,
     user_query_body: UserQueryBody,
 ):
+    Chats = chat_service.get_chats_by_user_id(
+        session=session, user_id=current_user.id
+    )
+    if not any(chat.id == user_query_body.chat_id for chat in Chats):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="无权限"
+        )
+
     try:
         chat_service.add_message_to_chat(
             session=session,
@@ -98,6 +106,13 @@ async def get_chat_messages(
     current_user: CurrentUser,
     chat_id: UUID,
 ):
+    Chats = chat_service.get_chats_by_user_id(
+        session=session, user_id=current_user.id
+    )
+    if not any(chat.id == chat_id for chat in Chats):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="无权限"
+        )
     try:
         messages = chat_service.get_messages_from_chat(
             session=session, chat_id=chat_id

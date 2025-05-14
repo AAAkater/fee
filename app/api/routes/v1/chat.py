@@ -62,14 +62,21 @@ async def add_message(
     current_user: CurrentUser,
     user_query_body: UserQueryBody,
 ):
-    Chats = chat_service.get_chats_by_user_id(
-        session=session, user_id=current_user.id
-    )
-    if not any(chat.id == user_query_body.chat_id for chat in Chats):
+    try:
+        db_chat = chat_service.get_chat_by_chat_id(
+            session=session, chat_id=user_query_body.chat_id
+        )
+    except Exception as e:
+        logger.error(f"Failed to get chat by chat_id: {e}")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="无权限"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Chat not found",
         )
 
+    if db_chat.owner_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="No permission"
+        )
     try:
         chat_service.add_message_to_chat(
             session=session,

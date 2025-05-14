@@ -112,3 +112,14 @@ def get_chats_by_user_id(
     db_chats = session.exec(stmt).all()
 
     return db_chats
+
+
+def get_chat_by_chat_id(
+    *,
+    session: Session,
+    chat_id: UUID,
+):
+    stmt = select(Chat).where(Chat.id == chat_id)
+    db_chat = session.exec(stmt).one()
+
+    return db_chat

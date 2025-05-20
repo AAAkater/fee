@@ -67,6 +67,11 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
     API_VER_STR: str = "/api/v1"
 
+    # LLM
+    MODEL_API_KEY: str = ""
+    MODEL_BASE_URL: str = ""
+    MODEL_NAME: str = ""
+
 
 settings = Settings()
 

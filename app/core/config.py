@@ -68,9 +68,9 @@ class Settings(BaseSettings):
     API_VER_STR: str = "/api/v1"
 
     # LLM
-    MODEL_API_KEY: str = ""
-    MODEL_BASE_URL: str = ""
-    MODEL_NAME: str = ""
+    MODEL_API_KEY: str = "sk-79f163a2710f4ce6a041d04328768e81"
+    MODEL_BASE_URL: str = "https://api.deepseek.com"
+    MODEL_NAME: str = "deepseek-chat"
 
 
 settings = Settings()

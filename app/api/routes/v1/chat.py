@@ -2,16 +2,21 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status
-
+from sse_starlette import EventSourceResponse
+from openai import OpenAI
+from app.core.config import settings
 from app.db.main import CurrentUser, SessionDep
 from app.models.db_models.chat import ChatCreate, MessageCreate
 from app.models.request.chat import UserQueryBody
 from app.models.response import ResponseBase
-from app.models.response.chat import ChatItem, MessageItem
+from app.models.response.chat import ChatItem
 from app.services import chat_service
 from app.utils.logger import logger
 
 router = APIRouter(tags=["chat"])
+client = OpenAI(
+    api_key=settings.MODEL_API_KEY, base_url=settings.MODEL_BASE_URL
+)
 
 
 @router.post("/chat", summary="Create a new chat")
@@ -96,14 +101,36 @@ async def add_message(
     # TODO
     # The interface returned by GPT has not been implemented yet,
     # so this variable is temporarily used to replace it
-    gpt_resp_content = "test"
+    async def generate_real_stream():
+        try:
+            response = client.chat.completions.create(
+                model="deepseek-chat",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a helpful assistant",
+                    },
+                    {"role": "user", "content": "Hello"},
+                ],
+                stream=True,
+            )
+            async for chunk in response:
+                if content := chunk.choices[0].delta.content:
+                    yield {
+                        "data": {
+                            "role": "assistant",
+                            "content": content,
+                            "created_at": datetime.now(
+                                timezone.utc
+                            ).isoformat(),
+                        }
+                    }
+        except Exception as e:
+            logger.error(f"流式生成失败: {e}")
+            yield {"data": "[ERROR] 服务异常"}
 
-    return ResponseBase[MessageItem](
-        data=MessageItem(
-            role="assistant",
-            content=gpt_resp_content,
-            created_at=datetime.now(timezone.utc),
-        )
+    return EventSourceResponse(
+        generate_real_stream(), ping=15, headers={"Cache-Control": "no-cache"}
     )
 
 

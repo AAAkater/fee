@@ -25,3 +25,11 @@ dependencies = [
     "sse-starlette>=2.3.3",
 ]
 
+[tool.uv.sources]
+agent = { workspace = true }
+rag = { workspace = true }
+graphrag = { workspace = true }
+traffic_monitoring = { workspace = true }
+
+[tool.uv.workspace]
+members = ["packages/*"]

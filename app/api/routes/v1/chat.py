@@ -4,7 +4,7 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException, status
 from sse_starlette import EventSourceResponse
 
 from app.db.main import CurrentUser, SessionDep
-from app.models.db_models.chat import ChatCreate, MessageCreate
+from app.models.db_models.chat import ChatCreate, MessageCreate, MessageInfo
 from app.models.request.chat import UserQueryBody
 from app.models.response import ResponseBase
 from app.models.response.chat import ChatItem
@@ -80,6 +80,7 @@ async def add_message(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="No permission"
         )
     try:
+        # add the user message to the chat
         chat_service.add_message_to_chat(
             session=session,
             new_message=MessageCreate(
@@ -88,6 +89,10 @@ async def add_message(
                 content=user_query_body.content,
                 sequence=0,
             ),
+        )
+        # retrieve all messages from the chat
+        messages: list[MessageInfo] = chat_service.get_messages_from_chat(
+            session=session, chat_id=user_query_body.chat_id
         )
     except Exception as e:
         logger.error(f"Failed to add messages: {e}")
@@ -99,9 +104,7 @@ async def add_message(
     async def stream_and_save():
         full_content = ""
 
-        async for chunk in generate_model_response_stream(
-            user_query_body.content
-        ):
+        async for chunk in generate_model_response_stream(messages):
             full_content += chunk
             yield chunk
 

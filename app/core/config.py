@@ -28,7 +28,7 @@ class Settings(BaseSettings):
             username=self.POSTGRESQL_USER,
             password=self.POSTGRESQL_PASSWORD,
             host=self.POSTGRESQL_SERVER,
-            port=self.POSTGRESQL_PROT,
+            port=self.POSTGRESQL_PORT,
             path=self.POSTGRESQL_DB,
         )
 

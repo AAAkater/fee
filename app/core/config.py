@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     # POSTGRESQL
     POSTGRESQL_USER: str = "postgres"
     POSTGRESQL_PASSWORD: str = ""
-    POSTGRESQL_PROT: int = 5432
+    POSTGRESQL_PORT: int = 5432
     POSTGRESQL_SERVER: str = "127.0.0.1"
     POSTGRESQL_DB: str = ""
 

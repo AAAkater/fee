@@ -2,8 +2,9 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status
-from sse_starlette import EventSourceResponse
 from openai import OpenAI
+from sse_starlette import EventSourceResponse
+
 from app.core.config import settings
 from app.db.main import CurrentUser, SessionDep
 from app.models.db_models.chat import ChatCreate, MessageCreate
@@ -89,6 +90,7 @@ async def add_message(
                 chat_id=user_query_body.chat_id,
                 role=user_query_body.role,
                 content=user_query_body.content,
+                sequence=0,
             ),
         )
     except Exception as e:
@@ -114,7 +116,7 @@ async def add_message(
                 ],
                 stream=True,
             )
-            async for chunk in response:
+            for chunk in response:
                 if content := chunk.choices[0].delta.content:
                     yield {
                         "data": {

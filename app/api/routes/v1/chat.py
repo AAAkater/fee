@@ -2,10 +2,8 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status
-from openai import OpenAI
 from sse_starlette import EventSourceResponse
 
-from app.core.config import settings
 from app.db.main import CurrentUser, SessionDep
 from app.models.db_models.chat import ChatCreate, MessageCreate
 from app.models.request.chat import UserQueryBody
@@ -13,11 +11,9 @@ from app.models.response import ResponseBase
 from app.models.response.chat import ChatItem
 from app.services import chat_service
 from app.utils.logger import logger
+from app.utils.model import model_client
 
 router = APIRouter(tags=["chat"])
-client = OpenAI(
-    api_key=settings.MODEL_API_KEY, base_url=settings.MODEL_BASE_URL
-)
 
 
 @router.post("/chat", summary="Create a new chat")
@@ -105,7 +101,7 @@ async def add_message(
     # so this variable is temporarily used to replace it
     async def generate_real_stream():
         try:
-            response = client.chat.completions.create(
+            response = model_client.chat.completions.create(
                 model="deepseek-chat",
                 messages=[
                     {

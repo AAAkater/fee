@@ -1,9 +1,8 @@
-from datetime import datetime, timezone
-
-from openai import OpenAI
+from openai import OpenAI, Stream
+from openai.types.chat.chat_completion_chunk import ChatCompletionChunk
 
 from app.core.config import settings
-from app.utils.logger import logger
+from app.models.db_models.chat import MessageInfo
 
 model_client = OpenAI(
     api_key=settings.MODEL_API_KEY, base_url=settings.MODEL_BASE_URL
@@ -57,17 +56,24 @@ system_prompt = """
 """
 
 
-async def generate_model_response_stream(user_input: str):
-    response = model_client.chat.completions.create(
-        model=settings.MODEL_NAME,
-        messages=[
+async def generate_model_response_stream(history: list[MessageInfo]):
+    messages = [{"role": "system", "content": system_prompt}]
+
+    messages.extend(
+        [
             {
-                "role": "system",
-                "content": system_prompt,
-            },
-            {"role": "user", "content": user_input},
-        ],
-        stream=True,
+                "role": message.role,
+                "content": message.content,
+            }
+            for message in history
+        ]
+    )
+    response: Stream[ChatCompletionChunk] = (
+        model_client.chat.completions.create(
+            model=settings.MODEL_NAME,
+            messages=messages,  # type: ignore
+            stream=True,
+        )
     )
     for chunk in response:
         if content := chunk.choices[0].delta.content:

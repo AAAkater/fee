@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status
@@ -11,7 +10,7 @@ from app.models.response import ResponseBase
 from app.models.response.chat import ChatItem
 from app.services import chat_service
 from app.utils.logger import logger
-from app.utils.model import model_client
+from app.utils.model import generate_model_response_stream
 
 router = APIRouter(tags=["chat"])
 
@@ -96,39 +95,10 @@ async def add_message(
             detail="Failed to add messages",
         )
 
-    # TODO
-    # The interface returned by GPT has not been implemented yet,
-    # so this variable is temporarily used to replace it
-    async def generate_real_stream():
-        try:
-            response = model_client.chat.completions.create(
-                model="deepseek-chat",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a helpful assistant",
-                    },
-                    {"role": "user", "content": "Hello"},
-                ],
-                stream=True,
-            )
-            for chunk in response:
-                if content := chunk.choices[0].delta.content:
-                    yield {
-                        "data": {
-                            "role": "assistant",
-                            "content": content,
-                            "created_at": datetime.now(
-                                timezone.utc
-                            ).isoformat(),
-                        }
-                    }
-        except Exception as e:
-            logger.error(f"流式生成失败: {e}")
-            yield {"data": "[ERROR] 服务异常"}
-
     return EventSourceResponse(
-        generate_real_stream(), ping=15, headers={"Cache-Control": "no-cache"}
+        generate_model_response_stream(),
+        ping=15,
+        headers={"Cache-Control": "no-cache"},
     )
 
 

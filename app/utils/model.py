@@ -58,27 +58,17 @@ system_prompt = """
 
 
 async def generate_model_response_stream(user_input: str):
-    try:
-        response = model_client.chat.completions.create(
-            model=settings.MODEL_NAME,
-            messages=[
-                {
-                    "role": "system",
-                    "content": system_prompt,
-                },
-                {"role": "user", "content": user_input},
-            ],
-            stream=True,
-        )
-        for chunk in response:
-            if content := chunk.choices[0].delta.content:
-                yield {
-                    "data": {
-                        "role": "assistant",
-                        "content": content,
-                        "created_at": datetime.now(timezone.utc).isoformat(),
-                    }
-                }
-    except Exception as e:
-        logger.error(f"流式生成失败: {e}")
-        yield {"data": "[ERROR] 服务异常"}
+    response = model_client.chat.completions.create(
+        model=settings.MODEL_NAME,
+        messages=[
+            {
+                "role": "system",
+                "content": system_prompt,
+            },
+            {"role": "user", "content": user_input},
+        ],
+        stream=True,
+    )
+    for chunk in response:
+        if content := chunk.choices[0].delta.content:
+            yield content

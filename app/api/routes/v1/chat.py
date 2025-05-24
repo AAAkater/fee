@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, HTTPException, status
 from sse_starlette import EventSourceResponse
 
 from app.db.main import CurrentUser, SessionDep
@@ -62,6 +62,7 @@ async def add_message(
     session: SessionDep,
     current_user: CurrentUser,
     user_query_body: UserQueryBody,
+    background_tasks: BackgroundTasks,
 ):
     try:
         db_chat = chat_service.get_chat_by_chat_id(
@@ -95,8 +96,28 @@ async def add_message(
             detail="Failed to add messages",
         )
 
+    async def stream_and_save():
+        full_content = ""
+
+        async for chunk in generate_model_response_stream(
+            user_query_body.content
+        ):
+            full_content += chunk
+            yield chunk
+
+        background_tasks.add_task(
+            chat_service.add_message_to_chat,
+            session=session,
+            new_message=MessageCreate(
+                chat_id=user_query_body.chat_id,
+                role="assistant",
+                content=full_content,
+                sequence=0,
+            ),
+        )
+
     return EventSourceResponse(
-        generate_model_response_stream(user_query_body.content),
+        stream_and_save(),
         ping=15,
         headers={"Cache-Control": "no-cache"},
     )

@@ -3,6 +3,7 @@ from enum import Enum
 from typing import List
 from uuid import UUID
 
+from openai.types.chat import ChatCompletionRole
 from pydantic import BaseModel
 from sqlmodel import Field, SQLModel
 
@@ -25,7 +26,7 @@ class MessageBase(SQLModel):
 
 
 class MessageInfo(SQLModel):
-    role: str
+    role: ChatCompletionRole
     content: str
     sequence: int
     created_at: datetime

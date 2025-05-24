@@ -60,7 +60,7 @@ system_prompt = """
 async def generate_model_response_stream(user_input: str):
     try:
         response = model_client.chat.completions.create(
-            model="deepseek-chat",
+            model=settings.MODEL_NAME,
             messages=[
                 {
                     "role": "system",

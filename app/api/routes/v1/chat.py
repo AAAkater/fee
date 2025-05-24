@@ -96,7 +96,7 @@ async def add_message(
         )
 
     return EventSourceResponse(
-        generate_model_response_stream(),
+        generate_model_response_stream(user_query_body.content),
         ping=15,
         headers={"Cache-Control": "no-cache"},
     )

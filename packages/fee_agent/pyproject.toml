@@ -5,7 +5,14 @@ description = "Add your description here"
 readme = "README.md"
 authors = [{ name = "AAAkater", email = "aaakater@qq.com" }]
 requires-python = ">=3.12"
-dependencies = ["numpy>=2.2.6"]
+dependencies = [
+    "llama-index>=0.12.37",
+    "llama-index-core>=0.12.37",
+    "llama-index-llms-deepseek>=0.1.1",
+    "llama-index-utils-workflow>=0.3.2",
+    "numpy>=2.2.6",
+    "pydantic-settings>=2.8.1",
+]
 
 [build-system]
 requires = ["hatchling"]

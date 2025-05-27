@@ -1,0 +1,17 @@
+DDOS_THRESHOLD = 100
+# Time window in seconds for rate limiting
+RATE_LIMIT_WINDOW = 60
+# Email to notify in case of DDoS detection
+ALERT_EMAIL = "admin@example.com"
+# Logging level for the application
+LOGGING_LEVEL = "INFO"
+# Database URI for storing logs and alerts
+DATABASE_URI = "sqlite:///ddos_detection.db"
+RISK_THRESHOLD = 0.7
+
+MAX_NORMAL_RPS = 10
+MAX_NORMAL_IP_CONCENTRATION = 5
+[llm]
+model_name = "deepseek-chat"
+model_base_url = "https://api.deepseek.com"
+model_api_key = ""

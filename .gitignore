@@ -10,3 +10,6 @@ wheels/
 .venv
 .env
 logs/
+
+packages/fee_agent/lib
+packages/fee_agent/show.html

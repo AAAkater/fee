@@ -7,3 +7,8 @@ class UserQueryBody(BaseModel):
     chat_id: UUID
     role: str
     content: str
+
+
+class UpdateTitleRequest(BaseModel):
+    chat_id: UUID
+    update_title: str

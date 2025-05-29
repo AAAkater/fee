@@ -2,12 +2,11 @@ from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, status
-from sqlmodel import Field
 from sse_starlette import EventSourceResponse
 
 from app.db.main import CurrentUser, SessionDep
 from app.models.db_models.chat import ChatCreate, MessageCreate, MessageInfo
-from app.models.request.chat import UserQueryBody
+from app.models.request.chat import UpdateTitleRequest, UserQueryBody
 from app.models.response import ResponseBase
 from app.models.response.chat import ChatItem, TitleUpdateItem
 from app.services import chat_service
@@ -183,14 +182,11 @@ async def get_user_chats(
 
 @router.post("/chat/title")
 async def update_chat_title(
-    session: SessionDep,
-    current_user: CurrentUser,
-    chat_id: UUID,
-    update_title: str,
+    session: SessionDep, current_user: CurrentUser, request: UpdateTitleRequest
 ):
     try:
         db_chat = chat_service.get_chat_by_chat_id(
-            session=session, chat_id=chat_id
+            session=session, chat_id=request.chat_id
         )
     except Exception as e:
         logger.error(f"Failed to get chat by chat_id: {e}")
@@ -205,10 +201,12 @@ async def update_chat_title(
         )
 
     try:
-        db_chat.title = update_title
+        db_chat.title = request.update_title
         return ResponseBase[TitleUpdateItem](
             data=TitleUpdateItem(
-                id=db_chat.id, title=update_title, update_at=datetime.now()
+                id=db_chat.id,
+                title=request.update_title,
+                update_at=datetime.now(),
             )
         )
     except Exception as e:

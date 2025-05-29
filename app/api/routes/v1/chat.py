@@ -186,7 +186,7 @@ async def update_chat_title(
     session: SessionDep,
     current_user: CurrentUser,
     chat_id: UUID,
-    update_tltle: str = Field(max_length=255),
+    update_title: str,
 ):
     try:
         db_chat = chat_service.get_chat_by_chat_id(
@@ -205,10 +205,10 @@ async def update_chat_title(
         )
 
     try:
-        db_chat.title = update_tltle
+        db_chat.title = update_title
         return ResponseBase[TitleUpdateItem](
             data=TitleUpdateItem(
-                id=db_chat.id, title=update_tltle, update_at=datetime.now()
+                id=db_chat.id, title=update_title, update_at=datetime.now()
             )
         )
     except Exception as e:

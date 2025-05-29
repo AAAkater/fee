@@ -1,13 +1,15 @@
+from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, status
+from sqlmodel import Field
 from sse_starlette import EventSourceResponse
 
 from app.db.main import CurrentUser, SessionDep
 from app.models.db_models.chat import ChatCreate, MessageCreate, MessageInfo
 from app.models.request.chat import UserQueryBody
 from app.models.response import ResponseBase
-from app.models.response.chat import ChatItem
+from app.models.response.chat import ChatItem, TitleUpdateItem
 from app.services import chat_service
 from app.utils.logger import logger
 from app.utils.model import generate_model_response_stream
@@ -176,4 +178,42 @@ async def get_user_chats(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get conversation list",
+        )
+
+
+@router.post("/chat/title")
+async def update_chat_title(
+    session: SessionDep,
+    current_user: CurrentUser,
+    chat_id: UUID,
+    update_tltle: str = Field(max_length=255),
+):
+    try:
+        db_chat = chat_service.get_chat_by_chat_id(
+            session=session, chat_id=chat_id
+        )
+    except Exception as e:
+        logger.error(f"Failed to get chat by chat_id: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Chat not found",
+        )
+
+    if db_chat.owner_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="No permission"
+        )
+
+    try:
+        db_chat.title = update_tltle
+        return ResponseBase[TitleUpdateItem](
+            data=TitleUpdateItem(
+                id=db_chat.id, title=update_tltle, update_at=datetime.now()
+            )
+        )
+    except Exception as e:
+        logger.error(f"Failed to update the title: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update the title",
         )

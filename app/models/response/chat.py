@@ -10,6 +10,12 @@ class ChatItem(BaseModel):
     created_at: datetime
 
 
+class TitleUpdateItem(BaseModel):
+    id: UUID
+    title: str
+    update_at: datetime
+
+
 class MessageItem(BaseModel):
     role: str
     content: str

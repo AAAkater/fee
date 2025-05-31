@@ -1,4 +1,3 @@
-from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, status
@@ -6,7 +5,7 @@ from sse_starlette import EventSourceResponse
 
 from app.db.main import CurrentUser, SessionDep
 from app.models.db_models.chat import ChatCreate, MessageCreate, MessageInfo
-from app.models.request.chat import UpdateTitleRequest, UserQueryBody
+from app.models.request.chat import TitleUpdateBody, UserQueryBody
 from app.models.response import ResponseBase
 from app.models.response.chat import ChatItem, TitleUpdateItem
 from app.services import chat_service
@@ -182,11 +181,13 @@ async def get_user_chats(
 
 @router.post("/chat/title")
 async def update_chat_title(
-    session: SessionDep, current_user: CurrentUser, request: UpdateTitleRequest
+    session: SessionDep,
+    current_user: CurrentUser,
+    title_update_body: TitleUpdateBody,
 ):
     try:
         db_chat = chat_service.get_chat_by_chat_id(
-            session=session, chat_id=request.chat_id
+            session=session, chat_id=title_update_body.chat_id
         )
     except Exception as e:
         logger.error(f"Failed to get chat by chat_id: {e}")
@@ -201,13 +202,10 @@ async def update_chat_title(
         )
 
     try:
-        db_chat.title = request.update_title
-        return ResponseBase[TitleUpdateItem](
-            data=TitleUpdateItem(
-                id=db_chat.id,
-                title=request.update_title,
-                update_at=datetime.now(),
-            )
+        new_db_chat = chat_service.update_chat_title_by_chat_id(
+            session=session,
+            chat_id=title_update_body.chat_id,
+            new_title=title_update_body.new_title,
         )
     except Exception as e:
         logger.error(f"Failed to update the title: {e}")
@@ -215,3 +213,10 @@ async def update_chat_title(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update the title",
         )
+    return ResponseBase[TitleUpdateItem](
+        data=TitleUpdateItem(
+            id=new_db_chat.id,
+            title=new_db_chat.title,
+            updated_at=new_db_chat.updated_at,
+        )
+    )

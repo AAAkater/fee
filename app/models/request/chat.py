@@ -9,6 +9,6 @@ class UserQueryBody(BaseModel):
     content: str
 
 
-class UpdateTitleRequest(BaseModel):
+class TitleUpdateBody(BaseModel):
     chat_id: UUID
-    update_title: str
+    new_title: str

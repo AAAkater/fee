@@ -13,7 +13,7 @@ class ChatItem(BaseModel):
 class TitleUpdateItem(BaseModel):
     id: UUID
     title: str
-    update_at: datetime
+    updated_at: datetime
 
 
 class MessageItem(BaseModel):

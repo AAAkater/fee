@@ -123,3 +123,15 @@ def get_chat_by_chat_id(
     db_chat = session.exec(stmt).one()
 
     return db_chat
+
+
+def update_chat_title_by_chat_id(
+    *, session: Session, chat_id: UUID, new_title: str
+):
+    stmt = select(Chat).where(Chat.id == chat_id)
+    db_chat = session.exec(stmt).one()
+    db_chat.title = new_title
+    session.add(db_chat)
+    session.commit()
+    session.refresh(db_chat)
+    return db_chat

@@ -153,13 +153,13 @@ async def get_chat_messages(
         messages = chat_service.get_messages_from_chat(
             session=session, chat_id=chat_id
         )
-        return ResponseBase(data=messages)
     except Exception as e:
         logger.error(f"Failed to get the messages: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get the messages",
         )
+    return ResponseBase[list[MessageInfo]](data=messages)
 
 
 @router.get("/chats")

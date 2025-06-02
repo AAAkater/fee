@@ -9,19 +9,26 @@ from app.models.db_models.chat import (
     TitleUpdate,
 )
 from app.models.db_models.tables import Chat, Message
+from app.models.response.chat import ChatInfoItem
 
 
 def create_new_chat(
     *,
     session: Session,
     new_chat_info: ChatCreate,
-):
-    new_chat = Chat.model_validate(new_chat_info)
+) -> ChatInfoItem:
+    db_chat = Chat.model_validate(new_chat_info)
 
-    session.add(new_chat)
+    session.add(db_chat)
     session.commit()
-    session.refresh(new_chat)
-    return new_chat
+    session.refresh(db_chat)
+    return ChatInfoItem(
+        id=db_chat.id,
+        title=db_chat.title,
+        created_at=db_chat.created_at,
+        updated_at=db_chat.updated_at,
+        owner_id=db_chat.owner_id,
+    )
 
 
 def update_chat_title(*, session: Session, new_title_info: TitleUpdate):
@@ -105,13 +112,29 @@ def get_chats_by_user_id(
     user_id: UUID,
 ):
     stmt = (
-        select(Chat)
+        select(
+            Chat.id,
+            Chat.title,
+            Chat.updated_at,
+            Chat.created_at,
+        )
         .where(Chat.owner_id == user_id)
         .order_by(desc(Chat.created_at))
     )
     db_chats = session.exec(stmt).all()
 
-    return db_chats
+    chat_infos = [
+        ChatInfoItem(
+            id=db_chat[0],
+            owner_id=user_id,
+            title=db_chat[1],
+            updated_at=db_chat[2],
+            created_at=db_chat[3],
+        )
+        for db_chat in db_chats
+    ]
+
+    return chat_infos
 
 
 def get_chat_by_chat_id(

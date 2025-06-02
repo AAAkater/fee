@@ -77,24 +77,31 @@ async def add_message(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="No permission"
         )
-    # 检查是否是首次对话
-    is_first_message = (
+
+    # If this is the first conversation, generate a title
+    if (
         chat_service.count_chat_messages(
             session=session, chat_id=user_query_body.chat_id
         )
         == 0
-    )
+    ):
+        try:
+            title = await generate_chat_title(user_query_body.content)
+            chat_service.update_chat_title_by_chat_id(
+                session=session,
+                chat_id=user_query_body.chat_id,
+                new_title=title,
+            )
+            logger.success(f"Chat title generated successfully:{title}")
+        except Exception as e:
+            logger.error(f"Failed to generate chat title:{e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to generate chat title",
+            )
 
-    # 如果是首次对话，生成标题
-    if is_first_message:
-        title = await generate_chat_title(user_query_body.content)
-        chat_service.update_chat_title_by_chat_id(
-            session=session,
-            chat_id=user_query_body.chat_id,
-            new_title=title,
-        )
+    # add the user message to the chat
     try:
-        # add the user message to the chat
         chat_service.add_message_to_chat(
             session=session,
             new_message=MessageCreate(

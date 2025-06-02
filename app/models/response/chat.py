@@ -4,9 +4,11 @@ from uuid import UUID
 from pydantic import BaseModel
 
 
-class ChatItem(BaseModel):
+class ChatInfoItem(BaseModel):
     id: UUID
+    owner_id: UUID
     title: str
+    updated_at: datetime
     created_at: datetime
 
 

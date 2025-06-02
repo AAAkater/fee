@@ -135,3 +135,10 @@ def update_chat_title_by_chat_id(
     session.commit()
     session.refresh(db_chat)
     return db_chat
+
+
+def count_chat_messages(*, session: Session, chat_id: UUID):
+    stmt = select(Message.id).where(Message.chat_id == chat_id)
+    db_messages = session.exec(stmt).all()
+
+    return len(db_messages) if db_messages else 0

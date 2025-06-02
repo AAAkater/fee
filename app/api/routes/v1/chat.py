@@ -2,7 +2,6 @@ from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, status
 from sse_starlette import EventSourceResponse
-
 from app.db.main import CurrentUser, SessionDep
 from app.models.db_models.chat import ChatCreate, MessageCreate, MessageInfo
 from app.models.request.chat import TitleUpdateBody, UserQueryBody
@@ -10,7 +9,7 @@ from app.models.response import ResponseBase
 from app.models.response.chat import ChatItem, TitleUpdateItem
 from app.services import chat_service
 from app.utils.logger import logger
-from app.utils.model import generate_model_response_stream
+from app.utils.model import generate_chat_title, generate_model_response_stream
 
 router = APIRouter(tags=["chat"])
 
@@ -78,6 +77,22 @@ async def add_message(
     if db_chat.owner_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="No permission"
+        )
+    # 检查是否是首次对话
+    is_first_message = (
+        chat_service.count_chat_messages(
+            session=session, chat_id=user_query_body.chat_id
+        )
+        == 0
+    )
+
+    # 如果是首次对话，生成标题
+    if is_first_message:
+        title = await generate_chat_title(user_query_body.content)
+        chat_service.update_chat_title_by_chat_id(
+            session=session,
+            chat_id=user_query_body.chat_id,
+            new_title=title,
         )
     try:
         # add the user message to the chat

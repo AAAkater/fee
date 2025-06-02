@@ -2,11 +2,12 @@ from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, status
 from sse_starlette import EventSourceResponse
+
 from app.db.main import CurrentUser, SessionDep
 from app.models.db_models.chat import ChatCreate, MessageCreate, MessageInfo
 from app.models.request.chat import TitleUpdateBody, UserQueryBody
 from app.models.response import ResponseBase
-from app.models.response.chat import ChatItem, TitleUpdateItem
+from app.models.response.chat import ChatInfoItem, TitleUpdateItem
 from app.services import chat_service
 from app.utils.logger import logger
 from app.utils.model import generate_chat_title, generate_model_response_stream
@@ -18,7 +19,7 @@ router = APIRouter(tags=["chat"])
 async def create_new_chat(
     session: SessionDep,
     current_user: CurrentUser,
-) -> ResponseBase[ChatItem]:
+) -> ResponseBase[ChatInfoItem]:
     """
     Creates a new chat for the current user.
 
@@ -36,7 +37,7 @@ async def create_new_chat(
         The new chat will be initialized with a default title of "New Chat".
     """
     try:
-        chat = chat_service.create_new_chat(
+        chat_info = chat_service.create_new_chat(
             session=session,
             new_chat_info=ChatCreate(
                 owner_id=current_user.id, title="New Chat"
@@ -48,9 +49,7 @@ async def create_new_chat(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create a new chat",
         )
-    return ResponseBase[ChatItem](
-        data=ChatItem(id=chat.id, title=chat.title, created_at=chat.created_at)
-    )
+    return ResponseBase[ChatInfoItem](data=chat_info)
 
 
 @router.post(
@@ -182,10 +181,10 @@ async def get_user_chats(
     current_user: CurrentUser,
 ):
     try:
-        chats = chat_service.get_chats_by_user_id(
+        chat_infos = chat_service.get_chats_by_user_id(
             session=session, user_id=current_user.id
         )
-        return ResponseBase(data=chats)
+        return ResponseBase[list[ChatInfoItem]](data=chat_infos)
     except Exception as e:
         logger.error(f"Failed to get conversation list: {e}")
         raise HTTPException(

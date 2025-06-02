@@ -55,6 +55,20 @@ system_prompt = """
 - “天穹安防GPT如何帮助满足GDPR等合规性要求?”
 """
 
+generate_chat_title_system_prompt = """
+请根据用户首次提问的意图，生成一个简洁的会话标题。要求：
+1. 长度严格控制在10个汉字以内
+2. 直接反映用户的核心需求或问题类型
+3. 使用名词短语或动宾结构，避免完整句子
+4. 保留专业术语但省略细节描述
+5. 示例参考：
+   - 用户问"如何用Python做数据清洗" → "Python数据清洗"
+   - 用户问"推荐适合新手的相机" → "新手相机推荐"
+   - 用户问"抑郁症的症状有哪些" → "抑郁症症状"
+
+当前用户首次提问内容如下
+"""
+
 
 async def generate_model_response_stream(history: list[MessageInfo]):
     messages = [{"role": "system", "content": system_prompt}]
@@ -78,3 +92,16 @@ async def generate_model_response_stream(history: list[MessageInfo]):
     for chunk in response:
         if content := chunk.choices[0].delta.content:
             yield content
+
+
+async def generate_chat_title(user_query: str):
+    response = model_client.chat.completions.create(
+        model=settings.MODEL_NAME,
+        messages=[
+            {"role": "system", "content": generate_chat_title_system_prompt},
+            {"role": "user", "content": user_query},
+        ],
+        stream=False,
+    )
+
+    return response.choices[0].message.content or ""
